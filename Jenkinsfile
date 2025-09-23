@@ -7,27 +7,27 @@ pipeline {
     DC_OUT = "dependency-check-report"
   }
 
-  options {
-    timestamps()
-  }
+  options { timestamps() }
 
   stages {
     stage('Checkout') {
       steps { checkout scm }
     }
 
-    stage('Install') {
-      steps { sh 'npm ci' }
+    stage('Install (Node in Docker)') {
+      steps {
+        // run npm ci in a temporary Node container, mounting workspace
+        sh 'docker run --rm -v "$PWD":/app -w /app node:18-alpine sh -lc "npm ci"'
+      }
     }
 
-    stage('Test') {
+    stage('Test (Node in Docker)') {
       steps {
-        // run tests if present; don’t fail the whole pipeline if none
-        sh 'npm test || echo "no tests or tests failed; continuing for lab"'
+        // run tests (don’t fail the lab if none present)
+        sh 'docker run --rm -v "$PWD":/app -w /app node:18-alpine sh -lc "npm test || echo no-tests"'
       }
       post {
         always {
-          // collect JUnit XML if your tests produce them (allow empty)
           junit testResults: '**/junit*.xml', allowEmptyResults: true
         }
       }
@@ -37,16 +37,15 @@ pipeline {
       steps {
         sh """
           rm -rf ${DC_OUT}
-          docker run --rm ^
-            -v \$PWD:/src ^
-            -v \$PWD/${DC_OUT}:/report ^
+          docker run --rm \
+            -v "$PWD":/src \
+            -v "$PWD/${DC_OUT}":/report \
             owasp/dependency-check:latest \
             --scan /src --format HTML --out /report --project nodeapp
-        """.stripIndent()
+        """
       }
       post {
         always {
-          // publish HTML report if plugin is available, otherwise just archive it
           script {
             try {
               publishHTML target: [
@@ -55,13 +54,12 @@ pipeline {
                 reportName: 'Dependency-Check Report'
               ]
             } catch (e) {
-              echo "HTML Publisher not installed; archiving report instead"
+              echo "HTML Publisher not installed; archiving instead"
             }
           }
           archiveArtifacts artifacts: "${DC_OUT}/**", allowEmptyArchive: true
         }
         success {
-          // simple gate: fail build if "High" or "Critical" appears in report
           script {
             def rc = sh(returnStatus: true, script: "grep -Ei 'High|Critical' ${DC_OUT}/dependency-check-report.html")
             if (rc == 0) { error 'High/Critical vulnerabilities found' }
