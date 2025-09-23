@@ -8,9 +8,9 @@ pipeline {
     }
 
     environment {
-        DOCKER_HUB_USER = 'vrushti672'
-        IMAGE_NAME      = 'securedevops-nodeapp-22167521'
-        DOCKER_HOST     = 'tcp://dind:2376'
+        DOCKER_HUB_USER   = 'vrushti672'
+        IMAGE_NAME        = 'securedevops-nodeapp-22167521'
+        DOCKER_HOST       = 'tcp://dind:2376'
         DOCKER_TLS_VERIFY = '1'
         DOCKER_CERT_PATH  = '/certs/client'
     }
