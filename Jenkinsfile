@@ -35,7 +35,11 @@ pipeline {
         stage('Dependency Vulnerability Scan') {
             steps {
                 echo 'Scanning dependencies for High and Critical vulnerabilities...'
-                sh 'npm audit --audit-level=high'
+                sh '''
+                    npm audit --json > npm-audit.json || true
+                    npm audit --audit-level=high
+                '''
+                archiveArtifacts artifacts: 'npm-audit.json', fingerprint: true
             }
         }
 
