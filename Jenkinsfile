@@ -40,6 +40,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
+                echo 'Installing Docker CLI in Node 16 build agent...'
+                sh '''
+                    apt-get update
+                    apt-get install -y docker.io
+                    docker --version
+                '''
+
                 echo 'Building Docker application image...'
                 sh 'docker build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
             }
