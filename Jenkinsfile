@@ -7,7 +7,7 @@ pipeline {
     agent {
         docker {
             image 'node:16-alpine'
-            args '-u root'
+            args '-u 1000:1000 -v /usr/local/bin/docker:/usr/local/bin/docker:ro'
         }
     }
 
@@ -42,17 +42,12 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                echo 'Installing Docker CLI in Node 16 build agent...'
+                echo 'Verifying Docker CLI and Docker-in-Docker connection...'
                 sh '''
-                    apk add --no-cache docker-cli
+                    node --version
+                    npm --version
                     docker --version
-                '''
-
-                echo 'Verifying Docker daemon configuration...'
-                sh '''
-                    echo "DOCKER_HOST=$DOCKER_HOST"
-                    env | grep '^DOCKER'
-                    docker context ls || true
+                    docker -H tcp://172.17.0.1:2375 info --format "Docker Server: {{.ServerVersion}}"
                 '''
 
                 echo 'Building Docker application image...'
@@ -69,8 +64,8 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_TOKEN'
                 )]) {
                     sh '''
-                        echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-                        docker push $DOCKER_IMAGE:$BUILD_NUMBER
+                        echo "$DOCKERHUB_TOKEN" | docker -H tcp://172.17.0.1:2375 login -u "$DOCKERHUB_USERNAME" --password-stdin
+                        docker -H tcp://172.17.0.1:2375 push $DOCKER_IMAGE:$BUILD_NUMBER
                     '''
                 }
             }
