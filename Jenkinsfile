@@ -5,7 +5,7 @@ pipeline {
 
     agent {
         docker {
-            image 'node:16'
+            image 'node:16-alpine'
             args '-u root'
         }
     }
@@ -43,8 +43,7 @@ pipeline {
             steps {
                 echo 'Installing Docker CLI in Node 16 build agent...'
                 sh '''
-                    apt-get update
-                    apt-get install -y docker.io
+                    apk add --no-cache docker-cli
                     docker --version
                 '''
 
