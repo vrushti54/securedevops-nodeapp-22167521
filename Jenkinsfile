@@ -1,13 +1,13 @@
 pipeline {
     environment {
         DOCKER_IMAGE = 'vrushti672/securedevops-nodeapp-22167521'
-        DOCKER_HOST = 'tcp://docker:2375'
+        DOCKER_HOST = 'tcp://172.17.0.1:2375'
     }
 
     agent {
         docker {
             image 'node:16-alpine'
-            args '-u root --network securedevops-jenkins-compose-22167521_default'
+            args '-u root'
         }
     }
 
@@ -56,7 +56,7 @@ pipeline {
                 '''
 
                 echo 'Building Docker application image...'
-                sh 'docker -H tcp://docker:2375 build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
+                sh 'docker -H tcp://172.17.0.1:2375 build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
             }
         }
 
