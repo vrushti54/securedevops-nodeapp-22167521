@@ -48,8 +48,15 @@ pipeline {
                     docker --version
                 '''
 
+                echo 'Verifying Docker daemon configuration...'
+                sh '''
+                    echo "DOCKER_HOST=$DOCKER_HOST"
+                    env | grep '^DOCKER'
+                    docker context ls || true
+                '''
+
                 echo 'Building Docker application image...'
-                sh 'docker build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
+                sh 'docker -H tcp://docker:2375 build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
             }
         }
 
