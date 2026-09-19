@@ -7,7 +7,7 @@ pipeline {
     agent {
         docker {
             image 'node:16-alpine'
-            args '-u root'
+            args '-u root --network securedevops-jenkins-compose-22167521_default'
         }
     }
 
