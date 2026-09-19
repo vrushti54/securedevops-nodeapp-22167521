@@ -1,6 +1,7 @@
 pipeline {
     environment {
         DOCKER_IMAGE = 'vrushti672/securedevops-nodeapp-22167521'
+        DOCKER_HOST = 'tcp://docker:2375'
     }
 
     agent {
